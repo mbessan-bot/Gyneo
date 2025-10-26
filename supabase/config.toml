@@ -1,1 +1,4 @@
 project_id = "lahmvrwgdseenezgbrbs"
+
+[functions.match-gynecologist]
+verify_jwt = false

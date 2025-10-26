@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ProgressBar";
+import { MatchResults } from "@/components/MatchResults";
 import { GeneralInfo } from "@/components/questionnaire/GeneralInfo";
 import { GenderPreference } from "@/components/questionnaire/GenderPreference";
 import { PracticeType } from "@/components/questionnaire/PracticeType";
@@ -12,6 +13,7 @@ import { Availability } from "@/components/questionnaire/Availability";
 import { ComfortLevel } from "@/components/questionnaire/ComfortLevel";
 import { ChevronLeft, ChevronRight, CheckCircle2, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FormData {
   generalInfo: {
@@ -32,6 +34,8 @@ interface FormData {
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     generalInfo: { name: "", age: "", email: "", phone: "" },
     genderPreference: "",
@@ -97,13 +101,56 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canProceed()) {
       toast.error("Please complete all required fields");
       return;
     }
-    console.log("Form submitted:", formData);
-    toast.success("Thank you! We're finding the perfect match for you.");
+    
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('match-gynecologist', {
+        body: {
+          preferences: {
+            genderPreference: formData.genderPreference,
+            practiceType: formData.practiceType,
+            consultationReason: formData.consultationReason,
+            specialConditions: formData.specialConditions,
+            language: formData.languagePreference,
+            availability: formData.availability,
+            sensitivity: formData.sensitivity,
+          },
+          generalInfo: formData.generalInfo,
+        },
+      });
+
+      if (error) throw error;
+
+      setMatches(data.matches || []);
+      setCurrentStep(totalSteps); // Move to results
+      toast.success("Found your perfect matches!");
+    } catch (error) {
+      console.error("Error finding matches:", error);
+      toast.error("Failed to find matches. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStartOver = () => {
+    setCurrentStep(0);
+    setMatches([]);
+    setFormData({
+      generalInfo: { name: "", age: "", email: "", phone: "" },
+      genderPreference: "",
+      practiceType: "",
+      consultationReason: "",
+      specialConditions: [],
+      languagePreference: "",
+      availability: [],
+      sensitivity: "",
+      notes: "",
+    });
   };
 
   const renderStep = () => {
@@ -166,6 +213,27 @@ const Index = () => {
     }
   };
 
+  // Show results screen
+  if (currentStep === totalSteps) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background p-4">
+        <div className="w-full max-w-4xl mx-auto pt-8">
+          <div className="text-center mb-8 animate-in fade-in slide-in-from-top duration-700">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary mb-4 shadow-lg">
+              <Heart className="w-8 h-8 text-white" />
+            </div>
+            <div className="mb-4">
+              <h1 className="text-5xl md:text-6xl font-bold mb-1 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+                Gyneo
+              </h1>
+            </div>
+          </div>
+          <MatchResults matches={matches} onStartOver={handleStartOver} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-3xl">
@@ -212,9 +280,15 @@ const Index = () => {
                 <ChevronRight className="w-4 h-4" />
               </Button>
             ) : (
-              <Button size="lg" onClick={handleSubmit} variant="secondary" className="gap-2">
+              <Button 
+                size="lg" 
+                onClick={handleSubmit} 
+                variant="secondary" 
+                className="gap-2"
+                disabled={isSubmitting}
+              >
                 <CheckCircle2 className="w-4 h-4" />
-                Find My Match
+                {isSubmitting ? "Finding Matches..." : "Find My Match"}
               </Button>
             )}
           </div>

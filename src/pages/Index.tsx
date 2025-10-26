@@ -174,9 +174,14 @@ const Index = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary mb-4 shadow-lg">
             <Heart className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+          <div className="mb-4">
+            <h1 className="text-5xl md:text-6xl font-bold mb-1 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+              Gyneo
+            </h1>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-semibold mb-2 text-foreground">
             Find Your Perfect Match
-          </h1>
+          </h2>
           <p className="text-muted-foreground text-lg">
             Connecting you with the right gynecologist for your needs
           </p>

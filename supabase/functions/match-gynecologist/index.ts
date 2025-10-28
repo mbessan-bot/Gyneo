@@ -34,85 +34,111 @@ serve(async (req) => {
       console.error('Error storing questionnaire response:', insertError);
     }
 
-    // Build the matching query
-    let query = supabase
+    // Get all gynecologists that accept new patients (no strict filtering)
+    const { data: gynecologists, error: queryError } = await supabase
       .from('gynecologists')
       .select('*')
       .eq('accepts_new_patients', true);
-
-    // Filter by gender preference
-    if (preferences.genderPreference && preferences.genderPreference !== 'no-preference') {
-      query = query.eq('gender', preferences.genderPreference);
-    }
-
-    // Filter by practice type
-    if (preferences.practiceType && preferences.practiceType !== 'no-preference') {
-      query = query.eq('practice_type', preferences.practiceType);
-    }
-
-    // Filter by language
-    if (preferences.language && preferences.language !== 'no-preference' && preferences.language !== 'other') {
-      query = query.contains('languages', [preferences.language]);
-    }
-
-    // Filter by specialties (consultation reason)
-    if (preferences.consultationReason && preferences.consultationReason !== 'other') {
-      query = query.contains('specialties', [preferences.consultationReason]);
-    }
-
-    // Get all matching gynecologists
-    const { data: gynecologists, error: queryError } = await query;
 
     if (queryError) {
       console.error('Error querying gynecologists:', queryError);
       throw queryError;
     }
 
-    console.log(`Found ${gynecologists?.length || 0} matching gynecologists`);
+    console.log(`Found ${gynecologists?.length || 0} gynecologists`);
 
-    // Score and rank the results
+    // Calculate compatibility scores with percentage-based matching
     const scoredResults = (gynecologists || []).map((gyno: any) => {
       let score = 0;
+      let maxScore = 0;
 
-      // Base score from rating
-      score += (gyno.rating || 0) * 20;
+      // Gender preference (20 points)
+      maxScore += 20;
+      if (preferences.genderPreference && preferences.genderPreference !== 'no-preference') {
+        if (gyno.gender === preferences.genderPreference) {
+          score += 20;
+        }
+      } else {
+        score += 20; // Full points if no preference
+      }
 
-      // Bonus for availability match
-      if (preferences.availability && Array.isArray(preferences.availability)) {
+      // Practice type (20 points)
+      maxScore += 20;
+      if (preferences.practiceType && preferences.practiceType !== 'no-preference') {
+        if (gyno.practice_type === preferences.practiceType) {
+          score += 20;
+        }
+      } else {
+        score += 20; // Full points if no preference
+      }
+
+      // Language (15 points)
+      maxScore += 15;
+      if (preferences.language && preferences.language !== 'no-preference' && preferences.language !== 'other') {
+        if (gyno.languages.includes(preferences.language)) {
+          score += 15;
+        }
+      } else {
+        score += 15; // Full points if no preference or other
+      }
+
+      // Consultation reason/specialty (20 points)
+      maxScore += 20;
+      if (preferences.consultationReason && preferences.consultationReason !== 'other') {
+        if (gyno.specialties.includes(preferences.consultationReason)) {
+          score += 20;
+        }
+      } else {
+        score += 20; // Full points if other
+      }
+
+      // Availability match (10 points)
+      maxScore += 10;
+      if (preferences.availability && Array.isArray(preferences.availability) && preferences.availability.length > 0) {
         const matchingSlots = preferences.availability.filter((slot: string) =>
           gyno.availability.includes(slot)
         );
-        score += matchingSlots.length * 10;
+        const availabilityScore = (matchingSlots.length / preferences.availability.length) * 10;
+        score += availabilityScore;
+      } else {
+        score += 10; // Full points if no availability preference
       }
 
-      // Bonus for specialty match with special conditions
-      if (preferences.specialConditions && Array.isArray(preferences.specialConditions)) {
+      // Special conditions (10 points)
+      maxScore += 10;
+      if (preferences.specialConditions && Array.isArray(preferences.specialConditions) && preferences.specialConditions.length > 0) {
         const matchingConditions = preferences.specialConditions.filter((condition: string) =>
           gyno.specialties.includes(condition)
         );
-        score += matchingConditions.length * 15;
+        const conditionsScore = (matchingConditions.length / preferences.specialConditions.length) * 10;
+        score += conditionsScore;
+      } else {
+        score += 10; // Full points if no special conditions
       }
 
-      // Bonus for experience
-      score += Math.min(gyno.years_experience, 25) * 0.5;
+      // Doctor rating (5 points max, based on 5-star scale)
+      maxScore += 5;
+      score += (gyno.rating || 0);
 
-      // Comfort level consideration (prefer higher rated doctors for higher sensitivity)
-      if (preferences.sensitivity === 'very-sensitive') {
-        score += (gyno.rating - 4.5) * 30;
-      }
+      // Calculate compatibility percentage
+      const compatibilityPercentage = Math.round((score / maxScore) * 100);
 
       return {
         ...gyno,
-        match_score: Math.round(score * 10) / 10,
+        match_score: compatibilityPercentage,
       };
     });
 
+    // Filter to only matches with 80% or higher compatibility
+    const qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 80);
+
     // Sort by match score descending and take top 5
-    const topMatches = scoredResults
+    const topMatches = qualifiedMatches
       .sort((a, b) => b.match_score - a.match_score)
       .slice(0, 5);
 
-    console.log('Top matches:', topMatches.map(m => ({ name: m.name, score: m.match_score })));
+    console.log(`Qualified matches (80%+): ${qualifiedMatches.length}`);
+    console.log('Top matches:', topMatches.map(m => ({ name: m.name, compatibility: m.match_score + '%' })));
 
     return new Response(
       JSON.stringify({ matches: topMatches, sessionId }),

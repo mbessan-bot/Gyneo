@@ -2,3 +2,6 @@ project_id = "lahmvrwgdseenezgbrbs"
 
 [functions.match-gynecologist]
 verify_jwt = false
+
+[functions.analyze-compatibility]
+verify_jwt = false

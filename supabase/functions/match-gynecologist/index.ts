@@ -63,8 +63,32 @@ serve(async (req) => {
 
     console.log(`Found ${gynecologists?.length || 0} active gynecologists`);
 
+    // NON-NEGOTIABLE: Filter by language first if patient has a language preference
+    let languageFilteredGynecologists = gynecologists || [];
+    if (preferences.language && preferences.language !== 'no-preference' && preferences.language !== 'other') {
+      languageFilteredGynecologists = languageFilteredGynecologists.filter((gyno: any) => 
+        gyno.languages.includes(preferences.language)
+      );
+      console.log(`After language filter (${preferences.language}): ${languageFilteredGynecologists.length} gynecologists`);
+      
+      if (languageFilteredGynecologists.length === 0) {
+        console.log('No gynecologists found matching language requirement');
+        return new Response(
+          JSON.stringify({ 
+            matches: [], 
+            sessionId, 
+            reason: `No gynecologists available who speak ${preferences.language}` 
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
+      }
+    }
+
     // Calculate compatibility scores with percentage-based matching
-    const scoredResults = (gynecologists || []).map((gyno: any) => {
+    const scoredResults = (languageFilteredGynecologists || []).map((gyno: any) => {
       let score = 0;
       let maxScore = 0;
 
@@ -88,12 +112,11 @@ serve(async (req) => {
         score += 20; // Full points if no preference
       }
 
-      // Language (15 points)
+      // Language (15 points) - Already filtered, so always award full points if specified
       maxScore += 15;
       if (preferences.language && preferences.language !== 'no-preference' && preferences.language !== 'other') {
-        if (gyno.languages.includes(preferences.language)) {
-          score += 15;
-        }
+        // If we got here, language already matches (hard filter applied)
+        score += 15;
       } else {
         score += 15; // Full points if no preference or other
       }

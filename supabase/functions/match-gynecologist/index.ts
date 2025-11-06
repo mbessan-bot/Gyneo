@@ -129,15 +129,15 @@ serve(async (req) => {
       };
     });
 
-    // Filter to only matches with 80% or higher compatibility
-    const qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 80);
+    // Filter to only matches with 65% or higher compatibility
+    const qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 65);
 
     // Sort by match score descending and take top 5
     const topMatches = qualifiedMatches
       .sort((a, b) => b.match_score - a.match_score)
       .slice(0, 5);
 
-    console.log(`Qualified matches (80%+): ${qualifiedMatches.length}`);
+    console.log(`Qualified matches (65%+): ${qualifiedMatches.length}`);
     console.log('Top matches:', topMatches.map(m => ({ name: m.name, compatibility: m.match_score + '%' })));
 
     return new Response(

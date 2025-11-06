@@ -20,7 +20,7 @@ serve(async (req) => {
     const { preferences, generalInfo } = await req.json();
     console.log('Matching request received:', { preferences, generalInfo });
 
-    // Store the questionnaire response
+    // Store the questionnaire response with active status
     const sessionId = crypto.randomUUID();
     const { error: insertError } = await supabase
       .from('questionnaire_responses')
@@ -28,24 +28,40 @@ serve(async (req) => {
         session_id: sessionId,
         general_info: generalInfo,
         preferences: preferences,
+        is_active: true,
       });
 
     if (insertError) {
       console.error('Error storing questionnaire response:', insertError);
     }
 
-    // Get all gynecologists that accept new patients (no strict filtering)
+    // Check if patient is active (in real implementation, this would check existing record)
+    const isPatientActive = true; // New submissions are active by default
+    
+    if (!isPatientActive) {
+      console.log('Patient is not active, returning empty results');
+      return new Response(
+        JSON.stringify({ matches: [], sessionId, reason: 'Patient not active' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // Get all ACTIVE gynecologists that accept new patients
     const { data: gynecologists, error: queryError } = await supabase
       .from('gynecologists')
       .select('*')
-      .eq('accepts_new_patients', true);
+      .eq('accepts_new_patients', true)
+      .eq('is_active', true);
 
     if (queryError) {
       console.error('Error querying gynecologists:', queryError);
       throw queryError;
     }
 
-    console.log(`Found ${gynecologists?.length || 0} gynecologists`);
+    console.log(`Found ${gynecologists?.length || 0} active gynecologists`);
 
     // Calculate compatibility scores with percentage-based matching
     const scoredResults = (gynecologists || []).map((gyno: any) => {
@@ -129,15 +145,81 @@ serve(async (req) => {
       };
     });
 
-    // Filter to only matches with 65% or higher compatibility
-    const qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 65);
+    // Determine format based on patient preferences specificity
+    // Format A: Patient has specific strong preferences (stricter filtering)
+    // Format B: Patient has flexible preferences (more lenient filtering)
+    const hasStrongPreferences = 
+      (preferences.genderPreference && preferences.genderPreference !== 'no-preference') ||
+      (preferences.practiceType && preferences.practiceType !== 'no-preference') ||
+      (preferences.consultationReason && preferences.consultationReason !== 'other') ||
+      (preferences.specialConditions && preferences.specialConditions.length > 0);
 
-    // Sort by match score descending and take top 5
-    const topMatches = qualifiedMatches
-      .sort((a, b) => b.match_score - a.match_score)
-      .slice(0, 5);
+    const matchFormat = hasStrongPreferences ? 'A' : 'B';
+    console.log(`Using matching format: ${matchFormat}`);
 
-    console.log(`Qualified matches (65%+): ${qualifiedMatches.length}`);
+    // Multi-stage filtering based on format
+    let qualifiedMatches;
+    
+    if (matchFormat === 'A') {
+      // Format A: Stricter filtering with higher thresholds
+      // Stage 1: Filter for 75%+ matches
+      const stage1Matches = scoredResults.filter(gyno => gyno.match_score >= 75);
+      
+      if (stage1Matches.length >= 5) {
+        qualifiedMatches = stage1Matches;
+        console.log(`Format A - Stage 1: Found ${stage1Matches.length} matches at 75%+`);
+      } else {
+        // Stage 2: Lower threshold to 65%
+        qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 65);
+        console.log(`Format A - Stage 2: Found ${qualifiedMatches.length} matches at 65%+`);
+      }
+    } else {
+      // Format B: More lenient filtering
+      // Stage 1: Filter for 65%+ matches
+      const stage1Matches = scoredResults.filter(gyno => gyno.match_score >= 65);
+      
+      if (stage1Matches.length >= 5) {
+        qualifiedMatches = stage1Matches;
+        console.log(`Format B - Stage 1: Found ${stage1Matches.length} matches at 65%+`);
+      } else {
+        // Stage 2: Lower threshold to 55%
+        qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 55);
+        console.log(`Format B - Stage 2: Found ${qualifiedMatches.length} matches at 55%+`);
+      }
+    }
+
+    // Sort by match score descending
+    qualifiedMatches.sort((a, b) => b.match_score - a.match_score);
+
+    // Shuffle matches within same score groups to provide variety
+    const shuffledMatches: any[] = [];
+    let currentScore = -1;
+    let currentGroup: any[] = [];
+
+    for (const match of qualifiedMatches) {
+      if (match.match_score !== currentScore) {
+        // Shuffle the previous group and add to results
+        if (currentGroup.length > 0) {
+          const shuffledGroup = currentGroup.sort(() => Math.random() - 0.5);
+          shuffledMatches.push(...shuffledGroup);
+        }
+        currentScore = match.match_score;
+        currentGroup = [match];
+      } else {
+        currentGroup.push(match);
+      }
+    }
+    
+    // Don't forget the last group
+    if (currentGroup.length > 0) {
+      const shuffledGroup = currentGroup.sort(() => Math.random() - 0.5);
+      shuffledMatches.push(...shuffledGroup);
+    }
+
+    // Best match filter: Take top 5 matches
+    const topMatches = shuffledMatches.slice(0, 5);
+
+    console.log(`Final matches returned: ${topMatches.length}`);
     console.log('Top matches:', topMatches.map(m => ({ name: m.name, compatibility: m.match_score + '%' })));
 
     return new Response(

@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           gender: string
           id: string
+          is_active: boolean | null
           languages: string[]
           location: string
           name: string
@@ -37,6 +38,7 @@ export type Database = {
           created_at?: string
           gender: string
           id?: string
+          is_active?: boolean | null
           languages?: string[]
           location: string
           name: string
@@ -52,6 +54,7 @@ export type Database = {
           created_at?: string
           gender?: string
           id?: string
+          is_active?: boolean | null
           languages?: string[]
           location?: string
           name?: string
@@ -67,6 +70,7 @@ export type Database = {
           created_at: string
           general_info: Json
           id: string
+          is_active: boolean | null
           preferences: Json
           session_id: string
         }
@@ -74,6 +78,7 @@ export type Database = {
           created_at?: string
           general_info: Json
           id?: string
+          is_active?: boolean | null
           preferences: Json
           session_id: string
         }
@@ -81,6 +86,7 @@ export type Database = {
           created_at?: string
           general_info?: Json
           id?: string
+          is_active?: boolean | null
           preferences?: Json
           session_id?: string
         }

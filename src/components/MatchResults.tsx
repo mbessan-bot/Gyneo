@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, MapPin, Calendar, Languages, Stethoscope } from "lucide-react";
+import { BookingDialog } from "./BookingDialog";
 
 interface Gynecologist {
   id: string;
@@ -24,6 +26,8 @@ interface MatchResultsProps {
 }
 
 export const MatchResults = ({ matches, onStartOver }: MatchResultsProps) => {
+  const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string } | null>(null);
+
   const formatSpecialty = (specialty: string) => {
     return specialty
       .split('-')
@@ -132,7 +136,12 @@ export const MatchResults = ({ matches, onStartOver }: MatchResultsProps) => {
                 </Badge>
               </div>
 
-              <Button className="w-full">Book Appointment</Button>
+              <Button 
+                className="w-full"
+                onClick={() => setSelectedDoctor({ id: gyno.id, name: gyno.name })}
+              >
+                Book Appointment
+              </Button>
             </CardContent>
           </Card>
         ))}
@@ -143,6 +152,13 @@ export const MatchResults = ({ matches, onStartOver }: MatchResultsProps) => {
           Start Over
         </Button>
       </div>
+
+      <BookingDialog
+        open={!!selectedDoctor}
+        onOpenChange={(open) => !open && setSelectedDoctor(null)}
+        gynecologistId={selectedDoctor?.id || ""}
+        gynecologistName={selectedDoctor?.name || ""}
+      />
     </div>
   );
 };

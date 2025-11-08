@@ -32,7 +32,7 @@ interface FormData {
   notes: string;
 }
 
-const Index = () => {
+const FindDoctor = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [matches, setMatches] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -303,4 +303,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default FindDoctor;

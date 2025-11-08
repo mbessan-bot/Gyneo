@@ -145,7 +145,7 @@ const DoctorSignup = () => {
 
         <div className="mt-6 text-center">
           <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
-            ← Back to patient portal
+            ← Back to home
           </Link>
         </div>
       </div>

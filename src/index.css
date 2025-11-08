@@ -17,18 +17,18 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 265 16% 29%;
 
-    --primary: 203 40% 43%;
+    --primary: 271 40% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 203 40% 85%;
+    --primary-light: 271 40% 90%;
 
-    --secondary: 271 29% 77%;
-    --secondary-foreground: 265 16% 29%;
-    --secondary-light: 271 29% 92%;
+    --secondary: 203 40% 43%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 203 35% 85%;
 
     --muted: 271 25% 94%;
     --muted-foreground: 265 16% 45%;
 
-    --accent: 203 40% 43%;
+    --accent: 271 50% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -36,16 +36,18 @@ All colors MUST be HSL.
 
     --border: 271 20% 88%;
     --input: 271 20% 92%;
-    --ring: 203 40% 43%;
+    --ring: 271 50% 60%;
 
     --radius: 0.75rem;
     
-    --gradient-primary: linear-gradient(135deg, hsl(203 40% 43%), hsl(203 45% 55%));
-    --gradient-secondary: linear-gradient(135deg, hsl(271 29% 77%), hsl(271 35% 85%));
-    --gradient-soft: linear-gradient(180deg, hsl(271 35% 97%), hsl(271 30% 95%));
+    --gradient-primary: linear-gradient(135deg, hsl(271 40% 65%), hsl(271 50% 75%));
+    --gradient-secondary: linear-gradient(135deg, hsl(203 40% 43%), hsl(203 45% 55%));
+    --gradient-soft: linear-gradient(180deg, hsl(271 35% 97%), hsl(271 40% 95%));
+    --gradient-hero: linear-gradient(135deg, hsl(271 50% 60%) 0%, hsl(203 40% 50%) 100%);
     
-    --shadow-soft: 0 4px 20px -4px hsl(203 40% 50% / 0.15);
-    --shadow-hover: 0 8px 30px -6px hsl(203 40% 50% / 0.25);
+    --shadow-soft: 0 4px 20px -4px hsl(271 40% 50% / 0.2);
+    --shadow-hover: 0 8px 30px -6px hsl(271 40% 50% / 0.35);
+    --shadow-purple-glow: 0 0 30px hsl(271 50% 60% / 0.3);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -56,17 +58,17 @@ All colors MUST be HSL.
 
     --sidebar-foreground: 265 16% 29%;
 
-    --sidebar-primary: 265 16% 29%;
+    --sidebar-primary: 271 40% 65%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 100%;
 
-    --sidebar-accent: 271 29% 92%;
+    --sidebar-accent: 271 40% 92%;
 
     --sidebar-accent-foreground: 265 16% 29%;
 
     --sidebar-border: 271 20% 88%;
 
-    --sidebar-ring: 203 40% 43%;
+    --sidebar-ring: 271 50% 60%;
   }
 
   .dark {
@@ -79,33 +81,35 @@ All colors MUST be HSL.
     --popover: 265 16% 16%;
     --popover-foreground: 271 29% 95%;
 
-    --primary: 203 40% 55%;
-    --primary-foreground: 0 0% 100%;
-    --primary-light: 203 35% 25%;
+    --primary: 271 45% 70%;
+    --primary-foreground: 265 16% 20%;
+    --primary-light: 271 35% 30%;
 
-    --secondary: 271 29% 70%;
-    --secondary-foreground: 265 16% 20%;
-    --secondary-light: 271 20% 25%;
+    --secondary: 203 40% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 203 30% 25%;
 
     --muted: 265 16% 20%;
     --muted-foreground: 271 20% 65%;
 
-    --accent: 203 40% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 271 50% 65%;
+    --accent-foreground: 265 16% 20%;
 
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 265 16% 24%;
     --input: 265 16% 20%;
-    --ring: 203 40% 55%;
+    --ring: 271 50% 65%;
     
-    --gradient-primary: linear-gradient(135deg, hsl(203 40% 35%), hsl(203 45% 45%));
-    --gradient-secondary: linear-gradient(135deg, hsl(271 29% 60%), hsl(271 35% 70%));
+    --gradient-primary: linear-gradient(135deg, hsl(271 45% 60%), hsl(271 50% 70%));
+    --gradient-secondary: linear-gradient(135deg, hsl(203 40% 35%), hsl(203 45% 45%));
     --gradient-soft: linear-gradient(180deg, hsl(265 16% 12%), hsl(265 16% 16%));
+    --gradient-hero: linear-gradient(135deg, hsl(271 50% 55%) 0%, hsl(203 40% 45%) 100%);
     
     --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.4);
-    --shadow-hover: 0 8px 30px -6px hsl(0 0% 0% / 0.5);
+    --shadow-hover: 0 8px 30px -6px hsl(271 40% 50% / 0.3);
+    --shadow-purple-glow: 0 0 30px hsl(271 50% 60% / 0.4);
   }
 }
 
@@ -116,5 +120,32 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .glow-purple {
+    box-shadow: var(--shadow-purple-glow);
+  }
+  
+  .glow-purple-hover:hover {
+    box-shadow: var(--shadow-purple-glow);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px hsl(271 50% 60% / 0.2);
+  }
+  to {
+    box-shadow: 0 0 30px hsl(271 50% 60% / 0.4);
   }
 }

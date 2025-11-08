@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
+const sb = supabase as any;
+ 
 const DoctorLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -27,11 +28,11 @@ const DoctorLogin = () => {
       if (error) throw error;
 
       // Check if user has doctor role
-      const { data: profile } = await supabase
+      const { data: profile } = await sb
         .from("profiles")
         .select("role")
         .eq("user_id", data.user.id)
-        .single();
+        .maybeSingle();
 
       if (profile?.role !== "doctor") {
         await supabase.auth.signOut();

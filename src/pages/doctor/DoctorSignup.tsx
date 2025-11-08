@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+const sb = supabase as any;
 
 const DoctorSignup = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ const DoctorSignup = () => {
 
       if (data.user) {
         // Update profile to doctor role
-        const { error: roleError } = await supabase
+        const { error: roleError } = await sb
           .from("profiles")
           .update({ role: "doctor" })
           .eq("user_id", data.user.id);

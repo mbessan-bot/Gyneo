@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Calendar, Users, LogOut, Star } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+const sb = supabase as any;
 
 interface Appointment {
   id: string;
@@ -44,11 +45,11 @@ const DoctorDashboard = () => {
       }
 
       // Check if user has doctor role
-      const { data: userProfile } = await supabase
+      const { data: userProfile } = await sb
         .from("profiles")
         .select("role")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (userProfile?.role !== "doctor") {
         toast.error("Access denied");
@@ -58,36 +59,47 @@ const DoctorDashboard = () => {
       }
 
       // Load doctor profile
-      const { data: doctorProfile, error: profileError } = await supabase
+      const { data: doctorProfile, error: profileError } = await sb
         .from("gynecologists")
-        .select("id, name, specialty, rating, is_active")
+        .select("id, name, specialties, rating, is_active")
         .eq("doctor_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
-        if (profileError.code === "PGRST116") {
-          // Profile doesn't exist, redirect to enrollment
+        if ((profileError as any).code === "PGRST116") {
           navigate("/doctor/enroll");
           return;
         }
         throw profileError;
       }
 
-      setProfile(doctorProfile);
+      if (!doctorProfile) {
+        navigate("/doctor/enroll");
+        return;
+      }
+
+      const normalizedProfile: DoctorProfile = {
+        id: (doctorProfile as any).id,
+        name: (doctorProfile as any).name,
+        specialty: Array.isArray((doctorProfile as any).specialties)
+          ? ((doctorProfile as any).specialties[0] || "General")
+          : "General",
+        rating: (doctorProfile as any).rating ?? 5,
+        is_active: (doctorProfile as any).is_active ?? true,
+      };
+
+      setProfile(normalizedProfile);
 
       // Load appointments
-      const { data: appointmentsData, error: appointmentsError } = await supabase
+      const { data: appointmentsData, error: appointmentsError } = await sb
         .from("appointments")
         .select("*")
-        .eq("gynecologist_id", doctorProfile.id)
+        .eq("gynecologist_id", (doctorProfile as any).id)
         .order("appointment_date", { ascending: true });
 
       if (appointmentsError) throw appointmentsError;
 
-      setAppointments(appointmentsData || []);
-    } catch (error: any) {
-      console.error("Error loading dashboard:", error);
-      toast.error("Failed to load dashboard");
+      setAppointments((appointmentsData as any) || []);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +113,7 @@ const DoctorDashboard = () => {
 
   const updateAppointmentStatus = async (appointmentId: string, status: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await sb
         .from("appointments")
         .update({ status })
         .eq("id", appointmentId);

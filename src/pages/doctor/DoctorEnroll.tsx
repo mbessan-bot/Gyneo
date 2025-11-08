@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+const sb = supabase as any;
 
 const DoctorEnroll = () => {
   const navigate = useNavigate();
@@ -71,20 +72,21 @@ const DoctorEnroll = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.from("gynecologists").insert({
+      const { error } = await sb.from("gynecologists").insert({
         doctor_id: userId,
         name: formData.name,
-        specialty: formData.specialty,
         gender: formData.gender,
-        practice_types: formData.practiceTypes,
-        consultation_reasons: formData.consultationReasons,
-        special_conditions: formData.specialConditions,
+        practice_type: formData.practiceTypes[0] || "solo-practice",
+        specialties: formData.consultationReasons.length
+          ? formData.consultationReasons
+          : (formData.specialty ? [formData.specialty] : []),
         languages: formData.languages,
         availability: formData.availability,
         years_experience: parseInt(formData.yearsExperience),
         bio: formData.bio,
         rating: formData.rating,
         is_active: true,
+        location: "Online",
       });
 
       if (error) throw error;

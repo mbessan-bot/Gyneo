@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+const sb = supabase as any;
 
 interface BookingDialogProps {
   open: boolean;
@@ -39,7 +40,7 @@ export const BookingDialog = ({
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await sb
         .from("appointments")
         .insert({
           patient_id: user.id,

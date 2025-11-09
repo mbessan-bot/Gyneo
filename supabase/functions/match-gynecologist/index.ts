@@ -192,9 +192,9 @@ serve(async (req) => {
         qualifiedMatches = stage1Matches;
         console.log(`Format A - Stage 1: Found ${stage1Matches.length} matches at 75%+`);
       } else {
-        // Stage 2: Lower threshold to 65%
-        qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 65);
-        console.log(`Format A - Stage 2: Found ${qualifiedMatches.length} matches at 65%+`);
+        // Stage 2: Lower threshold to 60%
+        qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 60);
+        console.log(`Format A - Stage 2: Found ${qualifiedMatches.length} matches at 60%+`);
       }
     } else {
       // Format B: More lenient filtering
@@ -205,9 +205,9 @@ serve(async (req) => {
         qualifiedMatches = stage1Matches;
         console.log(`Format B - Stage 1: Found ${stage1Matches.length} matches at 65%+`);
       } else {
-        // Stage 2: Lower threshold to 55%
-        qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 55);
-        console.log(`Format B - Stage 2: Found ${qualifiedMatches.length} matches at 55%+`);
+        // Stage 2: Lower threshold to 60%
+        qualifiedMatches = scoredResults.filter(gyno => gyno.match_score >= 60);
+        console.log(`Format B - Stage 2: Found ${qualifiedMatches.length} matches at 60%+`);
       }
     }
 

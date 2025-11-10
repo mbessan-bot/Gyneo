@@ -20,6 +20,7 @@ const DoctorEnroll = () => {
     name: "",
     specialty: "",
     gender: "",
+    location: "",
     practiceTypes: [] as string[],
     consultationReasons: [] as string[],
     specialConditions: [] as string[],
@@ -50,6 +51,17 @@ const DoctorEnroll = () => {
   const languageOptions = ["english", "spanish", "french", "mandarin", "arabic"];
   const availabilityOptions = ["weekday-mornings", "weekday-afternoons", "weekday-evenings", "weekend-mornings", "weekend-afternoons"];
   const genderOptions = ["female", "male"];
+  const locationOptions = [
+    { value: "lyon-1er", label: "Lyon 1er - Presqu'île" },
+    { value: "lyon-2e", label: "Lyon 2e - Confluence" },
+    { value: "lyon-3e", label: "Lyon 3e - Part-Dieu" },
+    { value: "lyon-4e", label: "Lyon 4e - Croix-Rousse" },
+    { value: "lyon-5e", label: "Lyon 5e - Vieux Lyon" },
+    { value: "lyon-6e", label: "Lyon 6e - Brotteaux" },
+    { value: "lyon-7e", label: "Lyon 7e - Gerland" },
+    { value: "lyon-8e", label: "Lyon 8e - Monplaisir" },
+    { value: "lyon-9e", label: "Lyon 9e - Vaise" },
+  ];
 
   const handleCheckbox = (field: string, value: string) => {
     setFormData(prev => {
@@ -86,7 +98,7 @@ const DoctorEnroll = () => {
         bio: formData.bio,
         rating: formData.rating,
         is_active: true,
-        location: "Online",
+        location: formData.location || "lyon-1er",
       });
 
       if (error) throw error;
@@ -163,6 +175,22 @@ const DoctorEnroll = () => {
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Practice Location *</Label>
+              <select
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                required
+              >
+                <option value="">Select a location</option>
+                {locationOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">

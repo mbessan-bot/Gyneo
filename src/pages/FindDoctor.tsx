@@ -11,6 +11,7 @@ import { SpecialConditions } from "@/components/questionnaire/SpecialConditions"
 import { LanguagePreference } from "@/components/questionnaire/LanguagePreference";
 import { Availability } from "@/components/questionnaire/Availability";
 import { ComfortLevel } from "@/components/questionnaire/ComfortLevel";
+import { Location } from "@/components/questionnaire/Location";
 import { ChevronLeft, ChevronRight, CheckCircle2, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ interface FormData {
     email: string;
     phone: string;
   };
+  location: string;
   genderPreference: string;
   practiceType: string;
   consultationReason: string;
@@ -38,6 +40,7 @@ const FindDoctor = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     generalInfo: { name: "", age: "", email: "", phone: "" },
+    location: "",
     genderPreference: "",
     practiceType: "",
     consultationReason: "",
@@ -48,7 +51,7 @@ const FindDoctor = () => {
     notes: "",
   });
 
-  const totalSteps = 8;
+  const totalSteps = 9;
 
   const updateGeneralInfo = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -67,18 +70,20 @@ const FindDoctor = () => {
           formData.generalInfo.phone
         );
       case 1:
-        return formData.genderPreference !== "";
+        return formData.location !== "";
       case 2:
-        return formData.practiceType !== "";
+        return formData.genderPreference !== "";
       case 3:
-        return formData.consultationReason !== "";
+        return formData.practiceType !== "";
       case 4:
-        return formData.specialConditions.length > 0;
+        return formData.consultationReason !== "";
       case 5:
-        return formData.languagePreference !== "";
+        return formData.specialConditions.length > 0;
       case 6:
-        return formData.availability.length > 0;
+        return formData.languagePreference !== "";
       case 7:
+        return formData.availability.length > 0;
+      case 8:
         return formData.sensitivity !== "";
       default:
         return false;
@@ -112,6 +117,7 @@ const FindDoctor = () => {
       const { data, error } = await supabase.functions.invoke('match-gynecologist', {
         body: {
           preferences: {
+            location: formData.location,
             genderPreference: formData.genderPreference,
             practiceType: formData.practiceType,
             consultationReason: formData.consultationReason,
@@ -142,6 +148,7 @@ const FindDoctor = () => {
     setMatches([]);
     setFormData({
       generalInfo: { name: "", age: "", email: "", phone: "" },
+      location: "",
       genderPreference: "",
       practiceType: "",
       consultationReason: "",
@@ -159,47 +166,54 @@ const FindDoctor = () => {
         return <GeneralInfo data={formData.generalInfo} onChange={updateGeneralInfo} />;
       case 1:
         return (
+          <Location
+            value={formData.location}
+            onChange={(value) => setFormData((prev) => ({ ...prev, location: value }))}
+          />
+        );
+      case 2:
+        return (
           <GenderPreference
             value={formData.genderPreference}
             onChange={(value) => setFormData((prev) => ({ ...prev, genderPreference: value }))}
           />
         );
-      case 2:
+      case 3:
         return (
           <PracticeType
             value={formData.practiceType}
             onChange={(value) => setFormData((prev) => ({ ...prev, practiceType: value }))}
           />
         );
-      case 3:
+      case 4:
         return (
           <ConsultationReason
             value={formData.consultationReason}
             onChange={(value) => setFormData((prev) => ({ ...prev, consultationReason: value }))}
           />
         );
-      case 4:
+      case 5:
         return (
           <SpecialConditions
             values={formData.specialConditions}
             onChange={(values) => setFormData((prev) => ({ ...prev, specialConditions: values }))}
           />
         );
-      case 5:
+      case 6:
         return (
           <LanguagePreference
             value={formData.languagePreference}
             onChange={(value) => setFormData((prev) => ({ ...prev, languagePreference: value }))}
           />
         );
-      case 6:
+      case 7:
         return (
           <Availability
             values={formData.availability}
             onChange={(values) => setFormData((prev) => ({ ...prev, availability: values }))}
           />
         );
-      case 7:
+      case 8:
         return (
           <ComfortLevel
             sensitivity={formData.sensitivity}
